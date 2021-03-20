@@ -1,41 +1,41 @@
 # request-restapi
 
-## 用途
+## About
 
-openapi-typescriptで出力したOpenAPIv3形式のTypeScript定義を元にして、強固な型チェックを提供します
+Provides robust type checking based on the OpenAPI v3 format TypeScript definition output by 'openapi-typescript'
 
-## 使い方
+## Usage
 
 ```ts
-import { paths } from "openapi-typescriptで出力した型情報";
-const rest = new Rest<paths>({ baseUrl: "基本となるURL", token:"Bearerアクセスtoken(省略可能)" });
+import { paths } from "Type information output by openapi-typescript";
+const rest = new Rest<paths>({ baseUrl: "Base URL", token:"Bearer access token (optional)" });
 const result = await rest.request({
-    path: "エンドポイントpath",
-    params: "pathパラメータ"
-    method: "get,postなどのメソッド",
-    headers: "ヘッダ",
-    body: "bodyで要求されるパラメータ",
-    token: "Bearer token(省略可、こちらが優先)"
+    path: "Endpoint path",
+    params: "path parameter"
+    method: "methods such as get and post",
+    headers: "header",
+    body: "Parameters required by body",
+    token: "Bearer token (optional, priority is given)"
 });
 
-//result.code 返却ステータス
-//result.body 返却データ
-//result.headers 返却ヘッダ
+//result.code Return status
+//result.body Return data
+//result.headers Return headers
 ```
 
-## 使用例
+## Example
 
 ```.ts
 //openapi-typescript https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/ghes-3.0/ghes-3.0.yaml > github.d.ts
-
+import { Rest } from "request-restapi";
 import { paths } from "./github";
 import env from "dotenv";
 
-env.config(); // '.env'ファイルにTOKENを設定してください
+env.config();
 const token = process.env.TOKEN;
 const rest = new Rest<paths>({ baseUrl: "https://api.github.com", token });
 
-//ユーザ名の表示
+//Display user name
 (async () => {
   const resultUser = await rest.request({
     path: "/user",
@@ -49,7 +49,8 @@ const rest = new Rest<paths>({ baseUrl: "https://api.github.com", token });
     console.error(resultUser);
   }
   console.log("---------");
-  //リポジトリ一覧の表示
+
+  // View repository list
   for (let page = 1; page < 100; page++) {
     const result = await rest.request({
       path: "/user/repos",
@@ -68,7 +69,8 @@ const rest = new Rest<paths>({ baseUrl: "https://api.github.com", token });
     }
   }
   console.log("---------");
-  //特定のリポジトリ情報を表示
+
+  // View specific repository information
   const resultRepo = await rest.request({
     path: "/repos/{owner}/{repo}",
     params: { owner: "SoraKumo001", repo: "request-restapi" },

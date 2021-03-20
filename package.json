@@ -1,8 +1,17 @@
 {
   "name": "request-restapi",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "license": "MIT",
+  "keywords": [
+    "openapi",
+    "swagger",
+    "request",
+    "fetch"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -b src",
     "test": "ts-node test/index.ts",
