@@ -14,7 +14,8 @@ const result = await rest.request({
     params: "pathパラメータ"
     method: "get,postなどのメソッド",
     headers: "ヘッダ",
-    body: "bodyで要求されるパラメータ"
+    body: "bodyで要求されるパラメータ",
+    token: "Bearer token(省略可、こちらが優先)"
 });
 
 //result.code 返却ステータス
