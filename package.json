@@ -4,8 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
-    "watch": "webpack --config src/webpack.config.ts -w",
+    "build": "tsc -b src",
     "test": "ts-node test/index.ts",
     "swagger:export": "openapi-typescript https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/ghes-3.0/ghes-3.0.yaml > test/github.d.ts"
   },

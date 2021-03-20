@@ -42,7 +42,7 @@ const rest = new Rest<paths>({ baseUrl: "https://api.github.com", token });
   //特定のリポジトリ情報を表示
   const resultRepo = await rest.request({
     path: "/repos/{owner}/{repo}",
-    params: { owner: "SoraKumo001", repo: "jswl-rwindow" },
+    params: { owner: "SoraKumo001", repo: "request-restapi" },
     method: "get",
   });
   if (resultRepo.code === 200) {
