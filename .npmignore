@@ -3,4 +3,9 @@ src
 *.log
 tsconfig.json
 yarn.lock
-.*
+.gitignore
+.eslintrc.json
+.env
+.env.d
+test
+.vscode

@@ -1,40 +1,39 @@
-import fetch from "node-fetch";
-
+import fetch from "isomorphic-fetch";
 interface Props {
   baseUrl: string;
   authKey?: string;
-  token?: string;
+  token?: string | null;
+  headers?: { [key: string]: string };
 }
 
 export class Rest<T> {
   private readonly baseUrl: string;
   private readonly authKey: string;
-  private readonly token?: string;
-  constructor({ baseUrl, token, authKey = "Bearer" }: Props) {
+  private readonly token?: string | null;
+  private readonly headers?: { [key: string]: string };
+  constructor({ baseUrl, token, authKey = "Bearer", headers }: Props) {
     this.baseUrl = baseUrl;
     this.authKey = authKey;
     this.token = token;
+    this.headers = headers;
   }
   public request<
     P extends T,
     PATH extends keyof P,
     METHOD extends keyof P[PATH],
-    RET extends P[PATH][METHOD] extends { responses: infer res }
+    MULTI extends boolean,
+    RET extends P[PATH][METHOD] extends { responses: infer RES }
       ? {
-          [P in keyof res]: {
+          [P in keyof RES]: {
             code: P;
             headers: Headers;
-            body: res[P] extends { schema: infer R }
+            body: RES[P] extends { schema: infer R }
               ? R
-              : res[P] extends { content: { "application/json": infer R2 } }
+              : RES[P] extends { content: { "application/json": infer R2 } }
               ? R2
               : Blob;
           };
-        } extends {
-          [P in string]: infer R;
-        }
-        ? R
-        : never
+        }[keyof RES]
       : never
   >({
     method,
@@ -44,6 +43,7 @@ export class Rest<T> {
     query,
     body,
     token,
+    multipart,
   }: {
     method: METHOD;
     path: PATH;
@@ -66,12 +66,15 @@ export class Rest<T> {
         ? R
         : never
       : never;
-    body?: P[PATH][METHOD] extends {
-      requestBody: { content: { [key: string]: infer R } };
-    }
+    body?: MULTI extends true
+      ? { [key: string]: string | Blob }
+      : P[PATH][METHOD] extends {
+          requestBody: { content: { [key: string]: infer R } };
+        }
       ? R
       : never;
-    token?: string;
+    token?: string | null;
+    multipart?: MULTI;
   }): Promise<RET> {
     const regularParam = params
       ? Object.entries(params).reduce(
@@ -85,22 +88,41 @@ export class Rest<T> {
           .reduce((a, [key, value]) => `${a}${key}=${value}&`, "?")
           .trimEnd()
       : "";
+    const createFormData = (params: { [key: string]: string | Blob }) => {
+      const formData = new FormData();
+      Object.entries(params).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+
+      return formData;
+    };
+    const requestHeaders = {
+      ...(this.headers ? this.headers : {}),
+      ...(typeof headers === "object" ? headers : {}),
+      ...(!multipart ? { "Content-Type": "application/json" } : {}),
+      ...(token || this.token
+        ? { Authorization: `${this.authKey} ${token || this.token}` }
+        : {}),
+    };
     return fetch(this.baseUrl + regularParam + queryParam, {
       method: (method as string).toUpperCase(),
-      headers: {
-        "Content-Type": "application/json",
-        ...(typeof headers === "object" ? headers : {}),
-        ...(token || this.token
-          ? { Authorization: `${this.authKey} ${token || this.token}` }
-          : {}),
-      },
-      body: body && JSON.stringify(body),
+      headers: requestHeaders,
+      body:
+        body &&
+        (multipart === true
+          ? createFormData(body as { [key: string]: string | Blob })
+          : JSON.stringify(body)),
+      credentials: "same-origin",
     }).then(
       async (res) =>
         ({
           code: res.status,
           headers: res.headers,
-          body: await res.json().catch(async () => await res.blob()),
+          body: await res
+            .json()
+            .catch(async () => await res.blob())
+            .catch(async () => await res.text())
+            .catch(() => undefined),
         } as RET)
     );
   }
