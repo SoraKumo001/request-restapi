@@ -104,7 +104,7 @@ export class Rest<T> {
         ? { Authorization: `${this.authKey} ${token || this.token}` }
         : {}),
     };
-    return fetch(this.baseUrl + regularParam + queryParam, {
+    return fetch(this.baseUrl + (regularParam as string) + queryParam, {
       method: (method as string).toUpperCase(),
       headers: requestHeaders,
       body:
